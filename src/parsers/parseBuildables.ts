@@ -396,6 +396,7 @@ export function parseBuildables(categorizedDataClasses: CategorizedDataClasses, 
       meta,
       event: ficsmasBuildables.includes(entry.ClassName) ? 'FICSMAS' : 'NONE',
     };
+    // console.log('Buildable parsed: ['+descriptorName+']')
   });
 
   addVehicles(categorizedDataClasses, buildables);

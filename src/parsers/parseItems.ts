@@ -102,7 +102,6 @@ const excludeItems: string[] = [];
 const excludeEquip = [
   'Equip_MedKit_C', // Handled as consumable equipment
 ];
-
 export function parseItems(categorizedDataClasses: CategorizedDataClasses) {
   const items = getItems(categorizedDataClasses);
   mergeBiomassInfo(items, categorizedDataClasses);
@@ -159,6 +158,7 @@ function getItems(categorizedDataClasses: CategorizedDataClasses) {
       meta,
       event: ficsmasItems.includes(entry.ClassName) ? 'FICSMAS' : 'NONE',
     };
+  // console.log('Item parsed: ['+key+']')
   });
 
   return items;

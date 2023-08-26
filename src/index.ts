@@ -34,6 +34,7 @@ function parseDocsString(input: string) {
       throw new Error('Invalid Docs.json file -- missing required keys');
     }
     const match = nativeClassRegex.exec(entry.NativeClass);
+    // console.log(match)
     if (!match || !match[1]) {
       throw new Error(`Could not parse top-level class ${entry.NativeClass}`);
     }
@@ -42,13 +43,60 @@ function parseDocsString(input: string) {
   }
 
   const topLevelClassList = Object.keys(dataClassMap).sort();
+  // console.log(topLevelClassList)
   validateClassList(topLevelClassList);
   const categorizedDataClasses = categorizeDataClasses(dataClassMap);
+  // console.log(categorizedDataClasses)
+
+  function sort(data: any, key: any) {
+    // Convert the object to an array
+    const dataArray = Object.values(data);
+
+    // Sort the array based on the 'name' property
+    dataArray.sort((a: any, b: any) => a[key].localeCompare(b[key]));
+
+    // Convert the sorted array back to an object (if needed)
+    let sortedObject = dataArray.reduce((acc: any, obj: any) => {
+      acc[obj.name] = obj;
+      return acc;
+    }, {});
+    if(sortedObject === ''){
+      sortedObject = data
+      throw new Error(`Could not sort array`);
+    }
+    return sortedObject
+  }
+
 
   const { items, resources } = parseItems(categorizedDataClasses);
+  if(items && resources)console.log('Items and resources parsed')
+
+  const itemsSorted = sort(items, 'slug')
+  console.log('Sorted: items')
+  const resourcesSorted = sort(resources, 'itemClass')
+  console.log('Sorted: resources')
+  
   const buildables = parseBuildables(categorizedDataClasses, { items, resources });
+  if(buildables)console.log('Buildables parsed')
+
+  const buildablesSorted = sort(buildables, 'slug')
+  console.log('Sorted: buildables')
+
   const { productionRecipes, buildableRecipes, customizerRecipes } = parseRecipes(categorizedDataClasses, { items, buildables });
+  if(productionRecipes && buildableRecipes && customizerRecipes)console.log('Production, buildable and customizer recipes parsed')
+
+  const productionRecipesSorted = sort(productionRecipes, 'slug')
+  console.log('Sorted: roductionRecipes')
+  const buildableRecipesSorted = sort(buildableRecipes, 'slug')
+  console.log('Sorted: buildableRecipes')
+  const customizerRecipesSorted = sort(customizerRecipes, 'slug')
+  console.log('Sorted: customizerRecipes')
+
   const schematics = parseSchematics(categorizedDataClasses, { items, resources, productionRecipes, buildableRecipes, customizerRecipes });
+  if(schematics)console.log('Schematics parsed')
+
+  const schematicsSorted = sort(schematics, 'slug')
+  console.log('Sorted: schematics')
 
   const data = {
     items,
@@ -59,7 +107,17 @@ function parseDocsString(input: string) {
     customizerRecipes,
     schematics,
   };
-
+  
+  const dataSorted = {
+    itemsSorted,
+    resourcesSorted,
+    buildablesSorted,
+    productionRecipesSorted,
+    buildableRecipesSorted,
+    customizerRecipesSorted,
+    schematicsSorted,
+  };
+  // console.log(data)
   validateSlugs(data);
 
   return {
@@ -69,7 +127,7 @@ function parseDocsString(input: string) {
       dataClassesByTopLevelClass: dataClassMap,
       dataClassesByCategory: categorizedDataClasses,
     },
-    ...data,
+    ...data, ...dataSorted,
   };
 }
 

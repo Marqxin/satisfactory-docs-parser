@@ -32,33 +32,37 @@ export function createSlugFromClassname(className: string) {
 }
 
 const MATERIAL_SLUGS: any = {
-  'Concrete': 'concrete',
-  'Metal': 'metal',
-  'Grip': 'metal',
-  'Polished': 'polished',
-  'ConcretePolished': 'polished',
-  'PolishedConcrete': 'polished',
-  'Asphalt': 'asphalt',
-  'Tar': 'asphalt',
-  'Orange': 'ficsit',
-  'Steel': 'steel',
-  'SteelWall': 'steel',
-  'Window': 'window',
-  'Wall_8x4_01': 'ficsit',
-  'Wall_8x4_02': 'steel',
+  '_Metal': 'metal',
+  '_Grip': 'metal',
+  '_Polished': 'polished',
+  '_ConcretePolished': 'polished',
+  '_PolishedConcrete': 'polished',
+  '_Concrete': 'concrete',
+  '_Asphalt': 'asphalt',
+  '_Tar': 'asphalt',
+  '_Orange': 'ficsit',
+  '_Steel': 'steel',
+  '_SteelWall': 'steel',
+  '_Window': 'window',
+  '_Wall_8x4_01': 'ficsit',
+  '_Wall_8x4_02': 'steel',
 };
-const materialRegex = new RegExp(`_(${Object.keys(MATERIAL_SLUGS).join('|')})(?:_|InCorner|OutCorner)`);
+
+const materialKeys = Object.keys(MATERIAL_SLUGS).join('|');
+const regexString = `${materialKeys}(?:_|InCorner|OutCorner)`;
+const materialRegex = new RegExp(regexString);
+
 export function createBuildableSlug(className: string, displayName: string) {
   if (className.includes('_CandyCaneDecor')) {
     return 'candy-cane-decor';
   }
+
   let slug = createBasicSlug(displayName);
-
-  const match = materialRegex.exec(className);
+  let match = materialRegex.exec(className);
   if (match) {
-    slug += `-${MATERIAL_SLUGS[match[1]]}`;
+    slug += `-${MATERIAL_SLUGS[match[0]]}`;
   }
-
+  
   return slug;
 }
 
@@ -71,7 +75,14 @@ export function createRecipeSlug(className: string, displayName: string) {
   if (className === 'Recipe_CartridgeChaos_Packaged_C') {
     return 'turbo-rifle-ammo-packaged-recipe';
   }
-  return `${createBasicSlug(displayName)}-recipe`;
+  
+  let slug = createBasicSlug(displayName);
+  let match = materialRegex.exec(className);
+  if (match) {
+    slug += `-${MATERIAL_SLUGS[match[0]]}`;
+  }
+
+  return `${slug}-recipe`;
 }
 
 export function createCustomizerSlug(className: string) {
@@ -140,9 +151,11 @@ export function buildableNameToDescriptorName(buildableName: string) {
   return buildableName.replace(/^Build_/, 'Desc_');
 }
 
-const classnameRegex = /\.(.+)$/;
+const classnameRegexDot = /\.(.*?)"/;
+const classnameRegex = /^(.*?)(?=")/;
 export function getShortClassname(fullName: string) {
-  const match = classnameRegex.exec(fullName);
+  const match = fullName.indexOf('.') >= 0 ? classnameRegexDot.exec(fullName) : classnameRegex.exec(fullName);
+  
   if (match && match[1]) {
     return match[1];
   }
@@ -151,10 +164,12 @@ export function getShortClassname(fullName: string) {
   return 'UNDEFINED';
 }
 
-const blueprintClassRegex = /^BlueprintGeneratedClass'"(.+)"'$/;
+const blueprintClassRegex = /BlueprintGeneratedClass.*\.([^']+)/;
 export function parseBlueprintClassname(classStr: string) {
+  // console.log('!!! classStr: ', classStr)
   const match = blueprintClassRegex.exec(classStr);
   if (match && match[1]) {
+    
     return getShortClassname(match[1]);
   }
   // eslint-disable-next-line no-console
