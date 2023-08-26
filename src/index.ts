@@ -51,13 +51,15 @@ function parseDocsString(input: string) {
   function sort(data: any, key: any) {
     // Convert the object to an array
     const dataArray = Object.values(data);
+    const dataKeys = Object.keys(data);
 
     // Sort the array based on the 'name' property
     dataArray.sort((a: any, b: any) => a[key].localeCompare(b[key]));
+    dataKeys.sort((a: any, b: any) => a.localeCompare(b));
 
     // Convert the sorted array back to an object (if needed)
-    let sortedObject = dataArray.reduce((acc: any, obj: any) => {
-      acc[obj.name] = obj;
+    let sortedObject = dataArray.reduce((acc: any, obj: any, index) => {
+      acc[dataKeys[index]] = obj;
       return acc;
     }, {});
     if(sortedObject === ''){
@@ -66,7 +68,6 @@ function parseDocsString(input: string) {
     }
     return sortedObject
   }
-
 
   const { items, resources } = parseItems(categorizedDataClasses);
   if(items && resources)console.log('Items and resources parsed')
