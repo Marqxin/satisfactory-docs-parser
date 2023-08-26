@@ -43,23 +43,38 @@ function parseDocsString(input: string) {
   }
 
   const topLevelClassList = Object.keys(dataClassMap).sort();
-  // console.log(topLevelClassList)
   validateClassList(topLevelClassList);
   const categorizedDataClasses = categorizeDataClasses(dataClassMap);
-  // console.log(categorizedDataClasses)
 
-  function sort(data: any, key: any) {
+  function sort(data: any, keyName: any) {
     // Convert the object to an array
-    const dataArray = Object.values(data);
+    const dataArray: any[] = Object.values(data);
     const dataKeys = Object.keys(data);
+    const dataName = dataArray.map(obj => obj[keyName]);
 
-    // Sort the array based on the 'name' property
-    dataArray.sort((a: any, b: any) => a[key].localeCompare(b[key]));
-    dataKeys.sort((a: any, b: any) => a.localeCompare(b));
+    if (dataKeys.length !== dataName.length) {console.warn("Sortng: Arrays don't have the same length"); return;}
+    const mergedArray: { [keyName: string]: any }[] = dataKeys.map((keyName, index) => ({
+        [keyName]: dataName[index]
+    }));
+
+    function findKeyByValue(arr: any[], valueToFind: string): string | any {
+      for (const obj of arr) {
+        const key = Object.keys(obj)[0]; // Get the key (e.g., 'Desc_CartridgeChaos_C')
+        const value = obj[key]; // Get the value (e.g., 'Turbo Rifle Ammo')
+    
+        if (value === valueToFind) {
+          return key;
+        }
+      }
+      return null; // Value not found
+    }
+
+    // Sort the array based on the 'keyName' property
+    dataArray.sort((a: any, b: any) => a[keyName].localeCompare(b[keyName]));
 
     // Convert the sorted array back to an object (if needed)
     let sortedObject = dataArray.reduce((acc: any, obj: any, index) => {
-      acc[dataKeys[index]] = obj;
+      acc[findKeyByValue(mergedArray, obj[keyName])] = obj;
       return acc;
     }, {});
     if(sortedObject === ''){
@@ -72,7 +87,7 @@ function parseDocsString(input: string) {
   const { items, resources } = parseItems(categorizedDataClasses);
   if(items && resources)console.log('Items and resources parsed')
 
-  const itemsSorted = sort(items, 'slug')
+  const itemsSorted = sort(items, 'name')
   console.log('Sorted: items')
   const resourcesSorted = sort(resources, 'itemClass')
   console.log('Sorted: resources')
@@ -80,13 +95,13 @@ function parseDocsString(input: string) {
   const buildables = parseBuildables(categorizedDataClasses, { items, resources });
   if(buildables)console.log('Buildables parsed')
 
-  const buildablesSorted = sort(buildables, 'slug')
+  const buildablesSorted = sort(buildables, 'name')
   console.log('Sorted: buildables')
 
   const { productionRecipes, buildableRecipes, customizerRecipes } = parseRecipes(categorizedDataClasses, { items, buildables });
   if(productionRecipes && buildableRecipes && customizerRecipes)console.log('Production, buildable and customizer recipes parsed')
 
-  const productionRecipesSorted = sort(productionRecipes, 'slug')
+  const productionRecipesSorted = sort(productionRecipes, 'name')
   console.log('Sorted: roductionRecipes')
   const buildableRecipesSorted = sort(buildableRecipes, 'slug')
   console.log('Sorted: buildableRecipes')
@@ -96,7 +111,7 @@ function parseDocsString(input: string) {
   const schematics = parseSchematics(categorizedDataClasses, { items, resources, productionRecipes, buildableRecipes, customizerRecipes });
   if(schematics)console.log('Schematics parsed')
 
-  const schematicsSorted = sort(schematics, 'slug')
+  const schematicsSorted = sort(schematics, 'name')
   console.log('Sorted: schematics')
 
   const data = {
